@@ -6,7 +6,7 @@ O plano completo está em [docs/PLANO_MESTRE.md](docs/PLANO_MESTRE.md).
 
 ## Status
 
-**Fase 1 — Protótipo 3D.** Personagem com movimento e câmera em terceira pessoa num cenário de teste (PC). Controles de Android, cenário do Egito e interações ainda não existem.
+**Fase 1 — Protótipo 3D, com a fundação de rede.** Personagem com movimento e câmera em terceira pessoa no PC, e um servidor autoritativo (headless) com vários clientes e uma interação validada pelo servidor (cesto de grãos). Controles de Android, cenário do Egito e predição de movimento no cliente ainda não existem.
 
 ## Requisitos do ambiente
 
@@ -39,15 +39,31 @@ godot --headless --path game --import
 godot --headless --path game -s res://tests/run.gd
 ```
 
+**Jogar em rede (no mesmo PC):** um servidor e quantos clientes quiser (até 8), cada um em seu terminal. O servidor escuta só em `127.0.0.1` e **não tem autenticação**; não o exponha na internet ([ADR-0008](docs/decisions/0008-rede-enet-com-rpc.md)).
+
+```bash
+godot --headless --path game res://server/server_world.tscn
+godot --path game res://client/scenes/net_client.tscn -- --connect=127.0.0.1:7777
+```
+
+Opções do servidor, depois de `--`: `--port=7777` e `--bind=127.0.0.1`. No cliente, **E** coleta o cesto de grãos mais próximo: o servidor só aceita se você estiver a até 2,5 m e ninguém o tiver coletado.
+
+**Teste de rede** (servidor e clientes em script, sem janela; `GODOT` aponta para o executável):
+
+```bash
+GODOT=/caminho/do/godot bash game/tests/integration/run.sh
+```
+
 Leia [CONTRIBUTING.md](CONTRIBUTING.md) antes de abrir a primeira issue.
 
 ## Estrutura atual
 
 ```text
 game/               Projeto Godot
-  client/           Cenas e scripts do cliente
-  shared/           Regras usadas por cliente e servidor (ex.: movimento)
-  tests/            Executor e testes automatizados (ADR-0007)
+  client/           Cenas e scripts do cliente (offline e de rede)
+  server/           Servidor headless da partida
+  shared/           Regras e mensagens usadas por cliente e servidor (movimento, interação, Session)
+  tests/            Executor, testes unitários e teste de rede (ADR-0007, ADR-0008)
 .github/            Templates de issue e PR, CI e Dependabot
 docs/
   PLANO_MESTRE.md   Plano de desenvolvimento (fonte de referência)

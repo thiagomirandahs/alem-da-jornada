@@ -1,0 +1,23 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://client/scripts/net_client.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://shared/level.tscn" id="2_level"]
+[ext_resource type="Script" path="res://shared/session.gd" id="3_session"]
+
+[node name="Game" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="Level" parent="." instance=ExtResource("2_level")]
+
+[node name="Session" type="Node" parent="."]
+script = ExtResource("3_session")
+
+[node name="Avatars" type="Node3D" parent="."]
+
+[node name="Hud" type="CanvasLayer" parent="."]
+
+[node name="Label" type="Label" parent="Hud"]
+offset_left = 16.0
+offset_top = 16.0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 6

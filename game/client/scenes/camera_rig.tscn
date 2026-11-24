@@ -1,0 +1,14 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://client/scripts/camera_rig.gd" id="1_script"]
+
+[node name="CameraPivot" type="Node3D"]
+position = Vector3(0, 1.6, 0)
+rotation_degrees = Vector3(-20, 0, 0)
+script = ExtResource("1_script")
+
+[node name="SpringArm" type="SpringArm3D" parent="."]
+spring_length = 4.0
+
+[node name="Camera" type="Camera3D" parent="SpringArm"]
+current = true

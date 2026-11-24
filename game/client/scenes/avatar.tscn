@@ -1,0 +1,9 @@
+[gd_scene format=3]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_body"]
+
+[node name="Avatar" type="Node3D"]
+
+[node name="Body" type="MeshInstance3D" parent="."]
+position = Vector3(0, 1, 0)
+mesh = SubResource("CapsuleMesh_body")

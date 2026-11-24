@@ -3,6 +3,14 @@ extends RefCounted
 ## Regras de movimentação compartilhadas por cliente e servidor (ADR-0003).
 
 const SPEED := 5.0
+const MAX_INPUT := 1000.0
+
+
+## Aceita só entrada bem formada vinda da rede: tipos certos e números finitos (NaN contaminaria a posição).
+static func valid_input(move: Variant, yaw: Variant) -> bool:
+	return move is Vector2 and yaw is float \
+		and is_finite(move.x) and is_finite(move.y) and is_finite(yaw) \
+		and absf(move.x) <= MAX_INPUT and absf(move.y) <= MAX_INPUT
 
 
 ## Calcula a próxima velocidade. A entrada é limitada a comprimento 1,

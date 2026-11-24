@@ -31,5 +31,21 @@ func test_no_ar_aplica_gravidade() -> String:
 	return _expect(v, Vector3(0, -1 - GRAVITY * DELTA, 0))
 
 
+func test_entrada_de_rede_bem_formada_e_aceita() -> String:
+	return "" if Movement.valid_input(Vector2(0.5, -1.0), 1.2) else "deveria aceitar"
+
+
+func test_entrada_de_rede_malformada_e_recusada() -> String:
+	var bad := [
+		[Vector2(NAN, 0.0), 0.0], [Vector2(0.0, INF), 0.0], [Vector2.ZERO, NAN], [Vector2.ZERO, INF],
+		["x", 0.0], [Vector2.ZERO, "x"], [null, null], [Vector3.ZERO, 0.0],
+		[Vector2(Movement.MAX_INPUT + 1.0, 0.0), 0.0],
+	]
+	for pair in bad:
+		if Movement.valid_input(pair[0], pair[1]):
+			return "deveria recusar %s" % [pair]
+	return ""
+
+
 func _expect(actual: Vector3, expected: Vector3) -> String:
 	return "" if actual.is_equal_approx(expected) else "esperado %s, obtido %s" % [expected, actual]

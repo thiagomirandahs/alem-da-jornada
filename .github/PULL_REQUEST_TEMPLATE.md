@@ -1,6 +1,7 @@
 ## Issue relacionada
 
-Fecha #
+Closes #
+<!-- Use "Closes", "Fixes" ou "Resolves": o GitHub só fecha a issue sozinho com essas palavras em inglês. -->
 
 ## Objetivo
 
