@@ -1,0 +1,21 @@
+# Godot 4 (export_presets.cfg é versionado; credenciais de exportação ficam em .godot/)
+.godot/
+/android/
+
+# Builds exportados
+/build/
+
+# Segredos e credenciais: nunca versionar
+.env
+.env.*
+!.env.example
+*.keystore
+*.jks
+*.pem
+*.key
+*.p12
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini

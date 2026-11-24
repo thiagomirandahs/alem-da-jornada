@@ -1,0 +1,7 @@
+# Mantém as actions fixadas por SHA atualizadas via PR. O gitleaks (versions.env) é atualizado manualmente.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

@@ -1,0 +1,2 @@
+# Fins de linha LF em todos os arquivos de texto (padrão do Godot; evita diffs falsos no Windows)
+* text=auto eol=lf
