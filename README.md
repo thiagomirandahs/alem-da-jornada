@@ -6,7 +6,7 @@ O plano completo está em [docs/PLANO_MESTRE.md](docs/PLANO_MESTRE.md).
 
 ## Status
 
-**Fase 0 — Governança e fundação.** Ainda não existe código de jogo. O projeto Godot começa na Fase 1.
+**Fase 1 — Protótipo 3D.** Personagem com movimento e câmera em terceira pessoa num cenário de teste (PC). Controles de Android, cenário do Egito e interações ainda não existem.
 
 ## Requisitos do ambiente
 
@@ -24,11 +24,30 @@ git clone <url-do-repositorio> alem-da-jornada
 cd alem-da-jornada
 ```
 
-Depois, leia [CONTRIBUTING.md](CONTRIBUTING.md) antes de abrir a primeira issue.
+**Abrir e jogar:** no Godot, "Importar" → selecione `game/project.godot` → F5.
+
+| Ação | Teclado e mouse |
+|---|---|
+| Andar | W A S D ou setas |
+| Girar a câmera | Clique na tela para capturar o mouse e mova-o |
+| Liberar o mouse | Esc |
+
+**Rodar os testes** (use o executável `_console` no Windows para ver a saída):
+
+```bash
+godot --headless --path game --import
+godot --headless --path game -s res://tests/run.gd
+```
+
+Leia [CONTRIBUTING.md](CONTRIBUTING.md) antes de abrir a primeira issue.
 
 ## Estrutura atual
 
 ```text
+game/               Projeto Godot
+  client/           Cenas e scripts do cliente
+  shared/           Regras usadas por cliente e servidor (ex.: movimento)
+  tests/            Executor e testes automatizados (ADR-0007)
 .github/            Templates de issue e PR, CI e Dependabot
 docs/
   PLANO_MESTRE.md   Plano de desenvolvimento (fonte de referência)
@@ -39,7 +58,7 @@ SECURITY.md         Processo de segurança
 versions.env        Versões fixadas
 ```
 
-Os diretórios `game/`, `backend/`, `database/`, `infra/` e `tests/` (PLANO_MESTRE §4) serão criados quando cada módulo for implementado.
+Os diretórios `backend/`, `database/` e `infra/` (PLANO_MESTRE §4) serão criados quando cada módulo for implementado. Os testes do jogo ficam dentro de `game/tests/`, porque o Godot só carrega scripts de dentro do projeto.
 
 ## Documentação
 

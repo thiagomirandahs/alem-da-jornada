@@ -39,6 +39,7 @@ Fonte das regras: [docs/PLANO_MESTRE.md](docs/PLANO_MESTRE.md), seções 5, 6 e 
 - Idioma da documentação, issues e PRs: português do Brasil.
 - GDScript: seguir o guia de estilo oficial do Godot e usar tipagem estática.
 - Versões fixadas em `versions.env`.
+- Testes: `godot --headless --path game --import` e depois `godot --headless --path game -s res://tests/run.gd` (ADR-0007). Regras usadas pelo servidor ficam em `game/shared/` e têm teste.
 - Alterações pequenas, um assunto por PR.
 
 ## Ao terminar

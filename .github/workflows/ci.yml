@@ -28,3 +28,34 @@ jobs:
           echo "${GITLEAKS_SHA256}  $RUNNER_TEMP/$archive" | sha256sum --check --strict
           tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP" gitleaks
           "$RUNNER_TEMP/gitleaks" git --redact --verbose --no-banner .
+
+  godot:
+    name: Godot (importação, testes e execução)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Instalar Godot
+        run: |
+          source versions.env
+          zip="Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          curl -sSfL -o "$RUNNER_TEMP/$zip" \
+            "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/${zip}"
+          echo "${GODOT_LINUX_SHA512}  $RUNNER_TEMP/$zip" | sha512sum --check --strict
+          unzip -q "$RUNNER_TEMP/$zip" -d "$RUNNER_TEMP"
+          echo "GODOT=$RUNNER_TEMP/Godot_v${GODOT_VERSION}-stable_linux.x86_64" >> "$GITHUB_ENV"
+
+      - name: Importar projeto
+        run: '"$GODOT" --headless --path game --import'
+
+      - name: Testes
+        run: '"$GODOT" --headless --path game -s res://tests/run.gd'
+
+      - name: Executar cena principal
+        # o Godot sai com código 0 mesmo com erro de script; por isso o log é verificado
+        run: |
+          "$GODOT" --headless --path game --quit-after 120 2>&1 | tee run.log
+          ! grep -qE "ERROR|Parse Error" run.log
