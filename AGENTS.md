@@ -39,7 +39,8 @@ Fonte das regras: [docs/PLANO_MESTRE.md](docs/PLANO_MESTRE.md), seções 5, 6 e 
 - Idioma da documentação, issues e PRs: português do Brasil.
 - GDScript: seguir o guia de estilo oficial do Godot e usar tipagem estática.
 - Versões fixadas em `versions.env`.
-- Testes: `godot --headless --path game --import` e depois `godot --headless --path game -s res://tests/run.gd` (ADR-0007). Regras usadas pelo servidor ficam em `game/shared/` e têm teste.
+- Testes: `godot --headless --path game --import` e depois `godot --headless --path game -s res://tests/run.gd` (ADR-0007). Regras usadas pelo servidor ficam em `game/shared/` e têm teste. Teste de rede: `GODOT=<executável> bash game/tests/integration/run.sh`.
+- Toda mensagem de rede é declarada só em `game/shared/session.gd`, com os argumentos validados no servidor e teste (ADR-0008). O servidor identifica o jogador por `multiplayer.get_remote_sender_id()`, nunca por campo da mensagem.
 - Alterações pequenas, um assunto por PR.
 
 ## Ao terminar

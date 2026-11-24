@@ -1,0 +1,15 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://server/match_server.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://shared/level.tscn" id="2_level"]
+[ext_resource type="Script" path="res://shared/session.gd" id="3_session"]
+
+[node name="Game" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="Level" parent="." instance=ExtResource("2_level")]
+
+[node name="Session" type="Node" parent="."]
+script = ExtResource("3_session")
+
+[node name="Players" type="Node3D" parent="."]

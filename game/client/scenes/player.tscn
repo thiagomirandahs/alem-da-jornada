@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://client/scripts/player.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://client/scenes/camera_rig.tscn" id="2_rig"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 
@@ -17,12 +18,4 @@ shape = SubResource("CapsuleShape3D_body")
 position = Vector3(0, 1, 0)
 mesh = SubResource("CapsuleMesh_body")
 
-[node name="CameraPivot" type="Node3D" parent="."]
-position = Vector3(0, 1.6, 0)
-rotation_degrees = Vector3(-20, 0, 0)
-
-[node name="SpringArm" type="SpringArm3D" parent="CameraPivot"]
-spring_length = 4.0
-
-[node name="Camera" type="Camera3D" parent="CameraPivot/SpringArm"]
-current = true
+[node name="CameraPivot" parent="." instance=ExtResource("2_rig")]

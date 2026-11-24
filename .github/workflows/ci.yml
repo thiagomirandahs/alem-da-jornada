@@ -54,6 +54,9 @@ jobs:
       - name: Testes
         run: '"$GODOT" --headless --path game -s res://tests/run.gd'
 
+      - name: Teste de rede (servidor e clientes em script)
+        run: bash game/tests/integration/run.sh
+
       - name: Executar cena principal
         # o Godot sai com código 0 mesmo com erro de script; por isso o log é verificado
         run: |
