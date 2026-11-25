@@ -30,6 +30,19 @@ func test_cena_principal_tem_jogador_com_camera() -> String:
 	return "" if has_camera else "câmera do jogador não encontrada em %s" % path
 
 
+func test_tela_de_conexao_tem_campo_e_botao() -> String:
+	var screen := (load(ClientConfig.CONNECT_SCENE) as PackedScene).instantiate()
+	var ok := screen.get_script() != null and screen.get_node_or_null("%Address") is LineEdit \
+		and screen.get_node_or_null("%Connect") is Button and screen.get_node_or_null("%Status") is Label
+	screen.free()
+	return "" if ok else "tela de conexão sem script, Address, Connect ou Status"
+
+
+func test_android_abre_na_tela_de_conexao() -> String:
+	var main_scene: String = ProjectSettings.get_setting("application/run/main_scene.android", "")
+	return "" if main_scene == ClientConfig.CONNECT_SCENE else "obtido '%s'" % main_scene
+
+
 func test_cenas_de_rede_carregam_com_script_e_sessao() -> String:
 	for path in SCENES:
 		var scene := load(path) as PackedScene
