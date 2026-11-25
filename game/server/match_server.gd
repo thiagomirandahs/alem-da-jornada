@@ -9,8 +9,10 @@ var _bodies: Dictionary = {} # peer -> CharacterBody3D
 var _inputs: Dictionary = {} # peer -> {"move": Vector2, "yaw": float}, só o último vale
 var _objects: Dictionary = {} # id -> posição dos itens coletáveis do nível
 var _taken: Dictionary = {} # id -> peer que coletou
-var _required: Array[String] = [] # ids que a missão exige
-var _mission_done := false
+var _zones: Dictionary = {} # id -> posição das zonas de entrega
+var _delivered: Dictionary = {} # id -> peer que entregou
+var _needed: Array = [] # por missão (ordem de Missions.LIST): ids exigidos
+var _mission_done: Array = [] # por missão: já concluída
 var _last_collect: Dictionary = {} # peer -> instante do último pedido (ms)
 var _spawned := 0
 var _tick := 0
@@ -38,9 +40,14 @@ func _ready() -> void:
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
 	_session.input_received.connect(_on_input)
 	_session.collect_requested.connect(_on_collect_requested)
+	_session.deliver_requested.connect(_on_deliver_requested)
 	for node in get_tree().get_nodes_in_group("collectable"):
 		_objects[str(node.name)] = (node as Node3D).global_position
-	_required = Mission.required(_objects)
+	for node in get_tree().get_nodes_in_group("delivery_zone"):
+		_zones[str(node.name)] = (node as Node3D).global_position
+	for def in Missions.LIST:
+		_needed.append(Mission.required(_objects, def.prefix))
+		_mission_done.append(false)
 	if args.has("--stats"):
 		_stats = ServerStats.new()
 		_stats_last_msec = Time.get_ticks_msec()
@@ -96,7 +103,8 @@ func _on_peer_connected(peer: int) -> void:
 	_bodies[peer] = body
 	for id in _taken: # quem entra depois também precisa saber o que já foi coletado
 		_session.push_collected.rpc_id(peer, id, _taken[id])
-	_session.push_mission.rpc_id(peer, Mission.progress(_required, _taken), _required.size(), _mission_done)
+	for i in Missions.LIST.size():
+		_session.push_mission.rpc_id(peer, Missions.LIST[i].id, Mission.progress(_needed[i], _completions(i)), _needed[i].size(), _mission_done[i])
 	print("jogador %d entrou (%d/%d)" % [peer, _bodies.size(), Session.MAX_PLAYERS])
 
 
@@ -127,16 +135,57 @@ func _on_collect_requested(peer: int, id: String) -> void:
 		_taken[id] = peer
 		_session.push_collected.rpc(id, peer)
 		print("jogador %d coletou %s" % [peer, id])
-		if _required.has(id):
-			_update_mission()
+		if _in_mission(id):
+			_update_missions()
 	else:
 		_session.push_denied.rpc_id(peer, id, reason)
 		print("jogador %d recusado em %s: %s" % [peer, id, reason])
 
 
-func _update_mission() -> void:
-	var done := Mission.is_done(_required, _taken)
-	_session.push_mission.rpc(Mission.progress(_required, _taken), _required.size(), done)
-	if done and not _mission_done: # conclui uma única vez
-		_mission_done = true
-		print("missão concluída: coletas por jogador %s" % Mission.contributions(_required, _taken))
+func _on_deliver_requested(peer: int, zone: String) -> void:
+	if not _bodies.has(peer):
+		return
+	var now := Time.get_ticks_msec()
+	if now - int(_last_collect.get(peer, -COLLECT_COOLDOWN_MSEC)) < COLLECT_COOLDOWN_MSEC:
+		_session.push_denied.rpc_id(peer, zone, "rapido")
+		return
+	_last_collect[peer] = now
+	var carried := Delivery.carried_by(peer, _delivery_prefix(), _taken, _delivered)
+	var reason := Delivery.check((_bodies[peer] as CharacterBody3D).position, _zones, zone, carried)
+	if reason.is_empty():
+		_delivered[carried[0]] = peer
+		_session.push_delivered.rpc(carried[0], peer)
+		print("jogador %d entregou %s em %s" % [peer, carried[0], zone])
+		_update_missions()
+	else:
+		_session.push_denied.rpc_id(peer, zone, reason)
+		print("jogador %d recusado na entrega em %s: %s" % [peer, zone, reason])
+
+
+## O que conta como progresso da missão i: coletas ou entregas.
+func _completions(i: int) -> Dictionary:
+	return _taken if Missions.LIST[i].kind == "collect" else _delivered
+
+
+func _in_mission(id: String) -> bool:
+	for needed in _needed:
+		if needed.has(id):
+			return true
+	return false
+
+
+func _delivery_prefix() -> String:
+	for def in Missions.LIST:
+		if def.kind == "deliver":
+			return def.prefix
+	return ""
+
+
+## Informa o progresso de todas as missões e conclui, uma única vez, cada uma que atingiu a meta.
+func _update_missions() -> void:
+	for i in Missions.LIST.size():
+		var done := Mission.is_done(_needed[i], _completions(i))
+		_session.push_mission.rpc(Missions.LIST[i].id, Mission.progress(_needed[i], _completions(i)), _needed[i].size(), done)
+		if done and not _mission_done[i]:
+			_mission_done[i] = true
+			print("missão %s concluída: por jogador %s" % [Missions.LIST[i].id, Mission.contributions(_needed[i], _completions(i))])

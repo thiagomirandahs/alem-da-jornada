@@ -4,21 +4,21 @@ const OBJECTS := {"Basket": Vector3(3, 0.3, 4), "Trigo02": Vector3(), "Trigo01":
 
 
 func test_exige_so_os_feixes_em_ordem() -> String:
-	return _expect_ids(["Trigo01", "Trigo02", "Trigo03"], Mission.required(OBJECTS))
+	return _expect_ids(["Trigo01", "Trigo02", "Trigo03"], Mission.required(OBJECTS, "Trigo"))
 
 
 func test_o_cesto_nao_conta_para_a_missao() -> String:
-	var needed := Mission.required(OBJECTS)
+	var needed := Mission.required(OBJECTS, "Trigo")
 	return _expect_int(0, Mission.progress(needed, {"Basket": 7}))
 
 
 func test_progresso_conta_feixes_de_todos_os_jogadores() -> String:
-	var needed := Mission.required(OBJECTS)
+	var needed := Mission.required(OBJECTS, "Trigo")
 	return _expect_int(2, Mission.progress(needed, {"Trigo01": 7, "Trigo03": 9, "Basket": 7}))
 
 
 func test_conclui_so_quando_o_ultimo_feixe_e_coletado() -> String:
-	var needed := Mission.required(OBJECTS)
+	var needed := Mission.required(OBJECTS, "Trigo")
 	var two := {"Trigo01": 7, "Trigo02": 9}
 	if Mission.is_done(needed, two):
 		return "com 2 de 3 a missão não deveria estar concluída"
@@ -27,11 +27,11 @@ func test_conclui_so_quando_o_ultimo_feixe_e_coletado() -> String:
 
 
 func test_sem_objetivo_nao_conclui() -> String:
-	return "" if not Mission.is_done(Mission.required({"Basket": Vector3()}), {}) else "missão sem feixes não pode concluir"
+	return "" if not Mission.is_done(Mission.required({"Basket": Vector3()}, "Trigo"), {}) else "missão sem feixes não pode concluir"
 
 
 func test_contribuicao_por_jogador() -> String:
-	var by_peer := Mission.contributions(Mission.required(OBJECTS), {"Trigo01": 7, "Trigo02": 9, "Trigo03": 7, "Basket": 9})
+	var by_peer := Mission.contributions(Mission.required(OBJECTS, "Trigo"), {"Trigo01": 7, "Trigo02": 9, "Trigo03": 7, "Basket": 9})
 	return "" if by_peer == {7: 2, 9: 1} else "contribuições erradas: %s" % by_peer
 
 
@@ -45,7 +45,7 @@ func test_o_nivel_tem_dez_feixes_com_ids_unicos() -> String:
 				return "id repetido no nível: %s" % node.name
 			objects[str(node.name)] = (node as Node3D).position
 	level.free()
-	var needed := Mission.required(objects)
+	var needed := Mission.required(objects, "Trigo")
 	return "" if needed.size() == 10 else "o nível deveria ter 10 feixes, tem %d" % needed.size()
 
 

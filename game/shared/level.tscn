@@ -24,6 +24,18 @@ size = Vector3(0.4, 0.6, 0.4)
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wheat"]
 albedo_color = Color(0.85, 0.68, 0.23, 1)
 
+[sub_resource type="BoxMesh" id="BoxMesh_sack"]
+size = Vector3(0.5, 0.5, 0.35)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sack"]
+albedo_color = Color(0.75, 0.6, 0.4, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_granary"]
+size = Vector3(3, 2, 3)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_granary"]
+albedo_color = Color(0.7, 0.45, 0.25, 1)
+
 [node name="Level" type="Node3D"]
 
 [node name="Environment" type="WorldEnvironment" parent="."]
@@ -125,3 +137,52 @@ position = Vector3(4, 0.3, 10)
 [node name="Mesh" type="MeshInstance3D" parent="Trigo10"]
 mesh = SubResource("BoxMesh_wheat")
 material_override = SubResource("StandardMaterial3D_wheat")
+
+[node name="Saco01" type="Node3D" parent="." groups=["collectable"]]
+position = Vector3(-5, 0.25, 14)
+
+[node name="Mesh" type="MeshInstance3D" parent="Saco01"]
+mesh = SubResource("BoxMesh_sack")
+material_override = SubResource("StandardMaterial3D_sack")
+
+[node name="Saco02" type="Node3D" parent="." groups=["collectable"]]
+position = Vector3(-3, 0.25, 14)
+
+[node name="Mesh" type="MeshInstance3D" parent="Saco02"]
+mesh = SubResource("BoxMesh_sack")
+material_override = SubResource("StandardMaterial3D_sack")
+
+[node name="Saco03" type="Node3D" parent="." groups=["collectable"]]
+position = Vector3(-1, 0.25, 14)
+
+[node name="Mesh" type="MeshInstance3D" parent="Saco03"]
+mesh = SubResource("BoxMesh_sack")
+material_override = SubResource("StandardMaterial3D_sack")
+
+[node name="Saco04" type="Node3D" parent="." groups=["collectable"]]
+position = Vector3(1, 0.25, 14)
+
+[node name="Mesh" type="MeshInstance3D" parent="Saco04"]
+mesh = SubResource("BoxMesh_sack")
+material_override = SubResource("StandardMaterial3D_sack")
+
+[node name="Saco05" type="Node3D" parent="." groups=["collectable"]]
+position = Vector3(3, 0.25, 14)
+
+[node name="Mesh" type="MeshInstance3D" parent="Saco05"]
+mesh = SubResource("BoxMesh_sack")
+material_override = SubResource("StandardMaterial3D_sack")
+
+[node name="Saco06" type="Node3D" parent="." groups=["collectable"]]
+position = Vector3(5, 0.25, 14)
+
+[node name="Mesh" type="MeshInstance3D" parent="Saco06"]
+mesh = SubResource("BoxMesh_sack")
+material_override = SubResource("StandardMaterial3D_sack")
+
+[node name="Celeiro" type="Node3D" parent="." groups=["delivery_zone"]]
+position = Vector3(0, 1, 18)
+
+[node name="Mesh" type="MeshInstance3D" parent="Celeiro"]
+mesh = SubResource("BoxMesh_granary")
+material_override = SubResource("StandardMaterial3D_granary")
