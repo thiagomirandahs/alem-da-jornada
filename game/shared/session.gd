@@ -14,6 +14,7 @@ signal collect_requested(peer: int, id: String)
 signal state_received(tick: int, players: Dictionary)
 signal collect_confirmed(id: String, by: int)
 signal collect_denied(id: String, reason: String)
+signal mission_updated(collected: int, target: int, done: bool)
 
 
 ## Cliente -> servidor. Só direção e giro: a posição é sempre calculada pelo servidor.
@@ -44,3 +45,9 @@ func push_collected(id: String, by: int) -> void:
 @rpc("authority", "call_remote", "reliable")
 func push_denied(id: String, reason: String) -> void:
 	collect_denied.emit(id, reason)
+
+
+## Servidor -> clientes: progresso da missão (coletados, meta, concluída). Só o servidor decide a conclusão.
+@rpc("authority", "call_remote", "reliable")
+func push_mission(collected: int, target: int, done: bool) -> void:
+	mission_updated.emit(collected, target, done)

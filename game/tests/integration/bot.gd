@@ -3,6 +3,7 @@ extends SceneTree
 ## como faria um cliente adulterado. Papéis:
 ##   a: pede de longe (recusado), anda até o cesto e coleta; espera b sair (servidor continua vivo).
 ##   b: tenta coletar o que já foi coletado, um objeto inexistente, envia entrada adulterada e mensagens inválidas.
+##   w0 e w1: colhem metade dos feixes de trigo cada um até a missão concluir; late entra depois e vê a missão concluída.
 ## Uso: godot --headless --path game -s res://tests/integration/bot.gd -- --role=a --port=17777
 
 const TIMEOUT_SEC := 30.0
@@ -14,6 +15,9 @@ var _tick := 0
 var _confirmations := 0
 var _confirmed_by := 0
 var _denied := ""
+var _mission_collected := 0
+var _mission_target := 0
+var _mission_done := false
 var _done := false
 
 
@@ -31,6 +35,7 @@ func _initialize() -> void:
 	_session.state_received.connect(_on_state)
 	_session.collect_confirmed.connect(_on_confirmed)
 	_session.collect_denied.connect(_on_denied)
+	_session.mission_updated.connect(_on_mission)
 	var peer := ENetMultiplayerPeer.new()
 	if peer.create_client("127.0.0.1", port) != OK:
 		_fail("não foi possível iniciar o cliente")
@@ -40,6 +45,12 @@ func _initialize() -> void:
 	match role:
 		"a":
 			await _role_a()
+		"w0":
+			await _role_worker(0)
+		"w1":
+			await _role_worker(1)
+		"late":
+			await _role_late()
 		"b":
 			await _role_b()
 		_:
@@ -119,6 +130,62 @@ func _role_b() -> void:
 	_pass()
 
 
+
+## Colhe os feixes de índice par (part=0) ou ímpar (part=1) e espera a missão concluir.
+func _role_worker(part: int) -> void:
+	var me := get_multiplayer().get_unique_id()
+	await _wait_until(func() -> bool: return _players.has(me))
+	var ids := _wheat_ids()
+	for i in ids.size():
+		if i % 2 != part:
+			continue
+		var target := _level_position(ids[i])
+		await _walk_to(target)
+		await create_timer(0.4).timeout
+		var reply := await _request_collect(ids[i])
+		if not _expect(reply == ACCEPTED, "%s deveria ser aceito, veio '%s'" % [ids[i], reply]):
+			return
+	await _wait_until(func() -> bool: return _mission_done)
+	if _expect(_mission_collected == ids.size() and _mission_target == ids.size(), "progresso final %d/%d, esperado %d" % [_mission_collected, _mission_target, ids.size()]):
+		_pass()
+
+
+## Entra depois da conclusão e já deve receber a missão concluída.
+func _role_late() -> void:
+	await _wait_until(func() -> bool: return _mission_done)
+	if _expect(_mission_collected == _mission_target and _mission_target > 0, "quem entra depois deveria ver a missão concluída"):
+		_pass()
+
+
+func _walk_to(target: Vector3) -> void:
+	var me := get_multiplayer().get_unique_id()
+	while not _done and (_players[me] as Vector3).distance_to(target) > Interaction.REACH - 0.8:
+		var to: Vector3 = target - (_players[me] as Vector3)
+		_session.send_input.rpc_id(1, Vector2(to.x, to.z).normalized(), 0.0)
+		await physics_frame
+	_session.send_input.rpc_id(1, Vector2.ZERO, 0.0)
+
+
+func _wheat_ids() -> Array[String]:
+	var level := (load("res://shared/level.tscn") as PackedScene).instantiate()
+	var objects := {}
+	for node in level.get_children():
+		objects[str(node.name)] = (node as Node3D).position if node is Node3D else Vector3.ZERO
+	level.free()
+	return Mission.required(objects)
+
+
+func _level_position(id: String) -> Vector3:
+	var level := (load("res://shared/level.tscn") as PackedScene).instantiate()
+	var position: Vector3 = (level.get_node(id) as Node3D).position
+	level.free()
+	return position
+
+
+func _on_mission(collected: int, target: int, done: bool) -> void:
+	_mission_collected = collected
+	_mission_target = target
+	_mission_done = done
 ## Envia o pedido e espera a resposta: o motivo da recusa, ou ACCEPTED se o servidor confirmou a coleta.
 func _request_collect(id: Variant) -> String:
 	var baseline := _confirmations

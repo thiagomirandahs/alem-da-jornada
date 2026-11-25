@@ -10,6 +10,7 @@ var _avatars: Dictionary = {} # peer -> Node3D
 var _targets: Dictionary = {} # peer -> último Vector3 recebido do servidor
 var _rig: Node3D # câmera do jogador local; só existe depois do primeiro estado
 var _message := ""
+var _mission := ""
 
 @onready var _session: Session = $Session
 @onready var _label: Label = $Hud/Label
@@ -28,6 +29,7 @@ func _ready() -> void:
 	_session.state_received.connect(_on_state)
 	_session.collect_confirmed.connect(_on_collected)
 	_session.collect_denied.connect(_on_denied)
+	_session.mission_updated.connect(_on_mission)
 	_message = "Conectando a %s..." % address
 	_update_hud()
 
@@ -105,10 +107,15 @@ func _nearest_collectable_id() -> String:
 
 
 func _update_hud() -> void:
-	_label.text = "Você: jogador %d | Jogadores: %d\nWASD: andar | mouse: câmera | E: coletar | Esc: soltar o mouse\n%s" % [
-		multiplayer.get_unique_id(), _avatars.size(), _message]
+	_label.text = "Você: jogador %d | Jogadores: %d\nWASD: andar | mouse: câmera | E: coletar | Esc: soltar o mouse\n%s\n%s" % [
+		multiplayer.get_unique_id(), _avatars.size(), _mission, _message]
 
 
 func _quit(message: String) -> void:
 	printerr(message)
 	get_tree().quit(1)
+
+
+func _on_mission(collected: int, target: int, done: bool) -> void:
+	_mission = "Missão concluída!" if done else "Colheita: %d/%d" % [collected, target]
+	_update_hud()

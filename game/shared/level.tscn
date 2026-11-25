@@ -18,6 +18,12 @@ size = Vector3(0.8, 0.6, 0.8)
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_basket"]
 albedo_color = Color(0.55, 0.35, 0.15, 1)
 
+[sub_resource type="BoxMesh" id="BoxMesh_wheat"]
+size = Vector3(0.4, 0.6, 0.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wheat"]
+albedo_color = Color(0.85, 0.68, 0.23, 1)
+
 [node name="Level" type="Node3D"]
 
 [node name="Environment" type="WorldEnvironment" parent="."]
@@ -49,3 +55,73 @@ position = Vector3(3, 0.3, 4)
 [node name="Mesh" type="MeshInstance3D" parent="Basket"]
 mesh = SubResource("BoxMesh_basket")
 material_override = SubResource("StandardMaterial3D_basket")
+
+[node name="Trigo01" type="Node3D" parent="." groups=["collectable"]]
+position = Vector3(-4, 0.3, 8)
+
+[node name="Mesh" type="MeshInstance3D" parent="Trigo01"]
+mesh = SubResource("BoxMesh_wheat")
+material_override = SubResource("StandardMaterial3D_wheat")
+
+[node name="Trigo02" type="Node3D" parent="." groups=["collectable"]]
+position = Vector3(-2, 0.3, 8)
+
+[node name="Mesh" type="MeshInstance3D" parent="Trigo02"]
+mesh = SubResource("BoxMesh_wheat")
+material_override = SubResource("StandardMaterial3D_wheat")
+
+[node name="Trigo03" type="Node3D" parent="." groups=["collectable"]]
+position = Vector3(0, 0.3, 8)
+
+[node name="Mesh" type="MeshInstance3D" parent="Trigo03"]
+mesh = SubResource("BoxMesh_wheat")
+material_override = SubResource("StandardMaterial3D_wheat")
+
+[node name="Trigo04" type="Node3D" parent="." groups=["collectable"]]
+position = Vector3(2, 0.3, 8)
+
+[node name="Mesh" type="MeshInstance3D" parent="Trigo04"]
+mesh = SubResource("BoxMesh_wheat")
+material_override = SubResource("StandardMaterial3D_wheat")
+
+[node name="Trigo05" type="Node3D" parent="." groups=["collectable"]]
+position = Vector3(4, 0.3, 8)
+
+[node name="Mesh" type="MeshInstance3D" parent="Trigo05"]
+mesh = SubResource("BoxMesh_wheat")
+material_override = SubResource("StandardMaterial3D_wheat")
+
+[node name="Trigo06" type="Node3D" parent="." groups=["collectable"]]
+position = Vector3(-4, 0.3, 10)
+
+[node name="Mesh" type="MeshInstance3D" parent="Trigo06"]
+mesh = SubResource("BoxMesh_wheat")
+material_override = SubResource("StandardMaterial3D_wheat")
+
+[node name="Trigo07" type="Node3D" parent="." groups=["collectable"]]
+position = Vector3(-2, 0.3, 10)
+
+[node name="Mesh" type="MeshInstance3D" parent="Trigo07"]
+mesh = SubResource("BoxMesh_wheat")
+material_override = SubResource("StandardMaterial3D_wheat")
+
+[node name="Trigo08" type="Node3D" parent="." groups=["collectable"]]
+position = Vector3(0, 0.3, 10)
+
+[node name="Mesh" type="MeshInstance3D" parent="Trigo08"]
+mesh = SubResource("BoxMesh_wheat")
+material_override = SubResource("StandardMaterial3D_wheat")
+
+[node name="Trigo09" type="Node3D" parent="." groups=["collectable"]]
+position = Vector3(2, 0.3, 10)
+
+[node name="Mesh" type="MeshInstance3D" parent="Trigo09"]
+mesh = SubResource("BoxMesh_wheat")
+material_override = SubResource("StandardMaterial3D_wheat")
+
+[node name="Trigo10" type="Node3D" parent="." groups=["collectable"]]
+position = Vector3(4, 0.3, 10)
+
+[node name="Mesh" type="MeshInstance3D" parent="Trigo10"]
+mesh = SubResource("BoxMesh_wheat")
+material_override = SubResource("StandardMaterial3D_wheat")
