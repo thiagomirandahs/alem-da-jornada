@@ -45,16 +45,53 @@ static func node(mesh: Mesh, color_name: String, pos: Vector3 = Vector3.ZERO, ro
 	return n
 
 
-## Caixa centrada na origem.
+## Caixa centrada na origem. Para detalhes pequenos e peças planas: personagens históricos não podem ser feitos de caixas grandes.
 static func box(size: Vector3, color_name: String, pos: Vector3 = Vector3.ZERO, rot_deg: Vector3 = Vector3.ZERO) -> MeshInstance3D:
 	var mesh := BoxMesh.new()
 	mesh.size = size
-	return node(mesh, color_name, pos, rot_deg)
+	var n := node(mesh, color_name, pos, rot_deg)
+	n.set_meta("shape", "box")
+	n.set_meta("max_dim", maxf(size.x, maxf(size.y, size.z)))
+	return n
+
+
+## Tronco retangular afunilado: base (largura, profundidade) em y=0 e topo em y=height; `top_offset` desloca o topo.
+## É a forma-base dos personagens históricos e da arquitetura: faces planas, mas sem a cara de cubo.
+static func frustum(base: Vector2, top: Vector2, height: float, color_name: String, pos: Vector3 = Vector3.ZERO, rot_deg: Vector3 = Vector3.ZERO, top_offset: Vector2 = Vector2.ZERO) -> MeshInstance3D:
+	var n := node(frustum_mesh(base, top, height, top_offset), color_name, pos, rot_deg)
+	n.set_meta("shape", "frustum")
+	n.set_meta("max_dim", maxf(maxf(base.x, base.y), maxf(maxf(top.x, top.y), height)))
+	return n
+
+
+static func frustum_mesh(base: Vector2, top: Vector2, height: float, top_offset: Vector2 = Vector2.ZERO) -> ArrayMesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	st.set_smooth_group(-1)
+	var signs := [Vector2(1, 1), Vector2(-1, 1), Vector2(-1, -1), Vector2(1, -1)] # mesma ordem de um prisma de 4 lados
+	var bottom: Array[Vector3] = []
+	var upper: Array[Vector3] = []
+	for s in signs:
+		bottom.append(Vector3(s.x * base.x / 2.0, 0.0, s.y * base.y / 2.0))
+		upper.append(Vector3(s.x * top.x / 2.0 + top_offset.x, height, s.y * top.y / 2.0 + top_offset.y))
+	var center_bottom := Vector3.ZERO
+	var center_top := Vector3(top_offset.x, height, top_offset.y)
+	for i in 4:
+		var j := (i + 1) % 4
+		_tri(st, bottom[i], upper[i], upper[j])
+		_tri(st, bottom[i], upper[j], bottom[j])
+		_tri(st, center_bottom, bottom[i], bottom[j])
+		_tri(st, center_top, upper[j], upper[i])
+	st.generate_normals()
+	return st.commit()
 
 
 ## Prisma (ou tronco de cone) com `sides` lados: base em y=0, topo em y=height. Raio do topo 0 faz uma pirâmide.
 static func prism(sides: int, r_bottom: float, r_top: float, height: float, color_name: String, pos: Vector3 = Vector3.ZERO, rot_deg: Vector3 = Vector3.ZERO, spin_deg: float = 0.0) -> MeshInstance3D:
-	return node(prism_mesh(sides, r_bottom, r_top, height, spin_deg), color_name, pos, rot_deg)
+	var n := node(prism_mesh(sides, r_bottom, r_top, height, spin_deg), color_name, pos, rot_deg)
+	n.set_meta("shape", "prism")
+	n.set_meta("max_dim", maxf(maxf(r_bottom, r_top) * 2.0, height))
+	return n
 
 
 static func pyramid(sides: int, radius: float, height: float, color_name: String, pos: Vector3 = Vector3.ZERO, rot_deg: Vector3 = Vector3.ZERO) -> MeshInstance3D:

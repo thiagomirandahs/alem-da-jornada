@@ -6,6 +6,12 @@ const CHARACTER_BUDGET := 2000
 const TREE_BUDGET := 400
 const OBJECT_BUDGET := 300
 const EFFECT_BUDGET := 600
+const BUILDING_BUDGET := 1500
+# Universos de José e Daniel (docs/art/guia-jose-daniel.md): personagens históricos não podem ser feitos de caixas grandes
+# e as cenas históricas não podem ter item moderno nem o Desbravador.
+const BIG_BOX := 0.12
+const MAX_BOX_SHARE := 0.25
+const NOT_IN_HISTORY := ["Mochila", "Cantil", "Bota", "Lenco", "Bussola", "Lanterna", "Barraca", "Placa", "Desbravador", "Desbravadora"]
 
 
 func test_paleta_tem_as_cinco_cores_do_guia() -> String:
@@ -40,6 +46,8 @@ func test_orcamento_de_triangulos() -> String:
 		var budget := OBJECT_BUDGET
 		if name.begins_with("personagem"):
 			budget = CHARACTER_BUDGET
+		elif name.begins_with("construção"):
+			budget = BUILDING_BUDGET
 		elif name in ["pinheiro", "arvore", "palmeira"]:
 			budget = TREE_BUDGET
 		elif name.begins_with("efeito"):
@@ -59,6 +67,75 @@ func test_pranchas_usam_cabecalho_e_luz_do_kit() -> String:
 		if problem != "":
 			return problem
 	return ""
+
+
+func test_figuras_historicas_nao_sao_cubos() -> String:
+	for entry in _models():
+		var name: String = entry[0]
+		if not name.begins_with("personagem histórico"):
+			continue
+		var meshes := _meshes(entry[1] as Node)
+		var big_boxes := 0
+		for mesh in meshes:
+			if mesh.get_meta("shape", "") == "box" and float(mesh.get_meta("max_dim", 0.0)) >= BIG_BOX:
+				big_boxes += 1
+		var share := float(big_boxes) / float(meshes.size())
+		if share > MAX_BOX_SHARE:
+			return "%s: %.0f%% das peças são caixas grandes (limite %.0f%%)" % [name, share * 100.0, MAX_BOX_SHARE * 100.0]
+	return ""
+
+
+func test_cenas_historicas_sem_item_moderno() -> String:
+	var scenes: Array = []
+	for entry in _models():
+		if (entry[0] as String).begins_with("personagem histórico") or (entry[0] as String).begins_with("construção") or (entry[0] as String).begins_with("objeto histórico"):
+			scenes.append([entry[0], entry[1]])
+	scenes.append(["prancha do Egito", BoardJdCities.egypt()])
+	scenes.append(["prancha da Babilônia", BoardJdCities.babylon()])
+	scenes.append(["prancha de José", BoardJdCharacters.jose()])
+	scenes.append(["prancha de Daniel", BoardJdCharacters.daniel()])
+	for scene in scenes:
+		var found := _find_named(scene[1] as Node)
+		if found != "":
+			return "%s contém '%s', que não existe no mundo histórico" % [scene[0], found]
+	return ""
+
+
+func test_pranchas_jose_daniel_usam_cabecalho_luz_e_kit() -> String:
+	var builders := {1: BoardJdCharacters.jose, 3: BoardJdCities.egypt, 6: BoardJdCharacters.daniel, 8: BoardJdCities.babylon, 16: BoardJdConsistency.build}
+	for number in builders:
+		var board: Node = builders[number].call()
+		var problem := _check_board(board, number)
+		if problem == "":
+			problem = _check_materials(board, "prancha %d" % number)
+		if problem == "":
+			for mesh in _meshes(board):
+				if not mesh.has_meta("lowpoly"):
+					problem = "prancha %d tem malha que não veio do LowPoly" % number
+					break
+		board.free()
+		if problem != "":
+			return problem
+	return ""
+
+
+func _find_named(root: Node) -> String:
+	if root.name in NOT_IN_HISTORY:
+		return root.name
+	for child in root.get_children():
+		var found := _find_named(child)
+		if found != "":
+			return found
+	return ""
+
+
+func _roles() -> Dictionary:
+	return {"José jovem": Roles.jose_jovem(), "José administrador": Roles.jose_administrador(), "trabalhador": Roles.trabalhador(),
+		"responsável pelo celeiro": Roles.guardiao_celeiro(), "comerciante": Roles.comerciante(), "viajante": Roles.viajante(),
+		"moradora": Roles.morador(), "Daniel jovem": Roles.daniel(0), "Daniel adulto": Roles.daniel(1), "Daniel idoso": Roles.daniel(2),
+		"companheiro 1": Roles.companheiro(0), "companheiro 2": Roles.companheiro(1), "companheiro 3": Roles.companheiro(2),
+		"oficial": Roles.oficial(), "escriba": Roles.escriba(), "sábio": Roles.sabio(), "guarda cerimonial": Roles.guarda_cerimonial(),
+		"servidor": Roles.servidor()}
 
 
 # [nome, nó] de tudo que o kit constrói. Quem chama deve liberar com _free_models, mas o runner sai logo depois.
@@ -83,6 +160,21 @@ func _models() -> Array:
 		"efeito folhas": Fx.leaves(), "efeito fogo": Fx.fire(), "efeito neblina": Fx.mist_fireflies()}
 	for key in fx:
 		list.append([key, fx[key]])
+	var roles := _roles()
+	for key in roles:
+		list.append(["personagem histórico %s" % key, Figures.build(roles[key])])
+	var buildings := {"casa do Egito": Architecture.egypt_house(), "coluna de papiro": Architecture.egypt_column(),
+		"celeiro": Architecture.granary(), "palácio do Egito": Architecture.egypt_palace(), "obelisco": Architecture.obelisk(),
+		"barraca de feira": Architecture.market_stall(), "torre da Babilônia": Architecture.babylon_tower(),
+		"muralha": Architecture.city_wall(), "portão": Architecture.babylon_gate(), "zigurate": Architecture.ziggurat(),
+		"casa da Babilônia": Architecture.babylon_house(), "jardim em terraços": Architecture.garden_terrace()}
+	for key in buildings:
+		list.append(["construção %s" % key, buildings[key]])
+	var things := {"pote": Architecture.jar(), "cesto de grãos": Architecture.grain_basket(), "trigo": Architecture.wheat_patch(),
+		"pirâmide ao longe": Architecture.far_pyramid(), "mastro": Architecture.banner_pole(), "tabuleta de argila": Architecture.clay_tablet(),
+		"rolo": Architecture.scroll()}
+	for key in things:
+		list.append(["objeto histórico %s" % key, things[key]])
 	return list
 
 

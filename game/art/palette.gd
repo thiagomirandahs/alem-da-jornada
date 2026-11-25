@@ -27,6 +27,19 @@ const COLORS := {
 	"azul_flor": Color("#5C7FC4"),
 	"tinta": Color("#2A2019"), # olhos, boca e contornos
 	"rosa_bochecha": Color("#E59A8A"),
+	# Extensão do Egito, universo de José (propostas; areia e verde irrigado já existem: bege e verde_folha)
+	"ocre": Color("#C98B2B"),
+	"dourado_trigo": Color("#D9A93A"),
+	"terracota": Color("#C0602F"),
+	"adobe": Color("#C9A37A"),
+	"linho": Color("#EFE6D2"),
+	"azul_nilo": Color("#1F4E79"),
+	# Extensão da Babilônia, universo de Daniel (propostas; areia e creme já existem)
+	"azul_lapis": Color("#1B3F7A"),
+	"azul_petroleo": Color("#1F5F6B"),
+	"dourado_antigo": Color("#B8923A"),
+	"tijolo": Color("#8E3F2A"),
+	"verde_jardim": Color("#3F7F52"),
 	# Tons de pele
 	"pele_1": Color("#F3CBA8"),
 	"pele_2": Color("#E2A87A"),
@@ -50,6 +63,8 @@ const REFERENCE: Array[String] = ["marrom", "vermelho", "verde_floresta", "bege"
 const ACCENTED := {
 	"azul_ceu": "azul céu", "azul_agua": "azul água", "amarelo_lenco": "amarelo lenço",
 	"laranja_fogo": "laranja fogo", "amarelo_brasa": "amarelo brasa", "verde_folha": "verde folha",
+	"dourado_trigo": "dourado de trigo", "azul_nilo": "azul do Nilo", "azul_lapis": "azul lápis",
+	"azul_petroleo": "azul-petróleo", "dourado_antigo": "dourado envelhecido", "verde_jardim": "verde de jardim",
 }
 
 
