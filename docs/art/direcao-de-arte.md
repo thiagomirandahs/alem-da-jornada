@@ -2,6 +2,8 @@
 
 **Status:** pranchas produzidas e revisadas, **aguardando aprovação do autor** · **Issue:** #9 · Revisão: [revisao-de-consistencia.md](revisao-de-consistencia.md)
 
+Os universos históricos de José (Egito) e Daniel (Babilônia) têm guia próprio: [guia-jose-daniel.md](guia-jose-daniel.md). Os dois se encontram no mesmo kit (`game/art/`).
+
 Este documento tem duas partes:
 
 1. **Guia do autor** (seções 1 a 10), mantido como foi enviado.

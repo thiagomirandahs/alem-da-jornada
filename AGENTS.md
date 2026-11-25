@@ -41,7 +41,7 @@ Fonte das regras: [docs/PLANO_MESTRE.md](docs/PLANO_MESTRE.md), seções 5, 6 e 
 - Versões fixadas em `versions.env`.
 - Testes: `godot --headless --path game --import` e depois `godot --headless --path game -s res://tests/run.gd` (ADR-0007). Regras usadas pelo servidor ficam em `game/shared/` e têm teste. Teste de rede: `GODOT=<executável> bash game/tests/integration/run.sh`.
 - Toda mensagem de rede é declarada só em `game/shared/session.gd`, com os argumentos validados no servidor e teste (ADR-0008). O servidor identifica o jogador por `multiplayer.get_remote_sender_id()`, nunca por campo da mensagem.
-- Arte: todo modelo, cor e luz novos passam pelo kit em `game/art/` (`Palette`, `LowPoly`, `Stage`), nunca por material, cor ou luz soltos. O guia está em `docs/art/direcao-de-arte.md` e a verificação em `game/tests/unit/test_art_kit.gd`. A aprovação visual é do autor do projeto.
+- Arte: todo modelo, cor e luz novos passam pelo kit em `game/art/` (`Palette`, `LowPoly`, `Stage`; nos universos de José e Daniel também `Figures`, `Roles` e `Architecture`), nunca por material, cor ou luz soltos. Os guias estão em `docs/art/direcao-de-arte.md` e `docs/art/guia-jose-daniel.md`, e a verificação em `game/tests/unit/test_art_kit.gd`. A aprovação visual é do autor do projeto.
 - Alterações pequenas, um assunto por PR.
 
 ## Ao terminar
