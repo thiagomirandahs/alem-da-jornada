@@ -1,8 +1,9 @@
 extends Node3D
 ## Servidor da partida: dono do estado oficial (ADR-0003, ADR-0008). Sem tela.
-## Uso: godot --headless --path game res://server/server_world.tscn -- [--port=7777] [--bind=127.0.0.1]
+## Uso: godot --headless --path game res://server/server_world.tscn -- [--port=7777] [--bind=127.0.0.1] [--stats]
 
 const COLLECT_COOLDOWN_MSEC := 300
+const STATS_INTERVAL_SEC := 5.0
 
 var _bodies: Dictionary = {} # peer -> CharacterBody3D
 var _inputs: Dictionary = {} # peer -> {"move": Vector2, "yaw": float}, só o último vale
@@ -11,6 +12,8 @@ var _taken: Dictionary = {} # id -> peer que coletou
 var _last_collect: Dictionary = {} # peer -> instante do último pedido (ms)
 var _spawned := 0
 var _tick := 0
+var _stats: ServerStats # só existe com --stats
+var _stats_last_msec := 0
 var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 
 @onready var _session: Session = $Session
@@ -35,10 +38,36 @@ func _ready() -> void:
 	_session.collect_requested.connect(_on_collect_requested)
 	for node in get_tree().get_nodes_in_group("collectable"):
 		_objects[str(node.name)] = (node as Node3D).global_position
+	if args.has("--stats"):
+		_stats = ServerStats.new()
+		_stats_last_msec = Time.get_ticks_msec()
+		var timer := Timer.new()
+		timer.wait_time = STATS_INTERVAL_SEC
+		timer.timeout.connect(_print_stats)
+		add_child(timer)
+		timer.start()
 	print("servidor pronto na porta %d" % port)
 
 
 func _physics_process(delta: float) -> void:
+	var start := Time.get_ticks_usec()
+	_simulate(delta)
+	if _stats != null:
+		_stats.record_tick(Time.get_ticks_usec() - start)
+
+
+func _print_stats() -> void:
+	var host := (multiplayer.multiplayer_peer as ENetMultiplayerPeer).host
+	var now := Time.get_ticks_msec()
+	var seconds := (now - _stats_last_msec) / 1000.0
+	_stats_last_msec = now
+	print(_stats.report(_bodies.size(), seconds,
+		host.pop_statistic(ENetConnection.HOST_TOTAL_SENT_DATA),
+		host.pop_statistic(ENetConnection.HOST_TOTAL_RECEIVED_DATA),
+		OS.get_static_memory_usage()))
+
+
+func _simulate(delta: float) -> void:
 	var positions := {}
 	for peer in _bodies:
 		var body: CharacterBody3D = _bodies[peer]

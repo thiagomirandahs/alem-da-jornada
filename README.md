@@ -54,6 +54,12 @@ Opções do servidor, depois de `--`: `--port=7777` e `--bind=127.0.0.1`. No cli
 GODOT=/caminho/do/godot bash game/tests/integration/run.sh
 ```
 
+**Medição de carga** (servidor com `--stats` e N clientes que andam; leva uns 15 min com os valores padrão). Resultados e método em [docs/testing/](docs/testing/):
+
+```bash
+GODOT=/caminho/do/godot bash game/tests/performance/run.sh [segundos=60] [repetições=3] ["jogadores"="1 2 4 8"]
+```
+
 Leia [CONTRIBUTING.md](CONTRIBUTING.md) antes de abrir a primeira issue.
 
 ## Estrutura atual
@@ -63,7 +69,7 @@ game/               Projeto Godot
   client/           Cenas e scripts do cliente (offline e de rede)
   server/           Servidor headless da partida
   shared/           Regras e mensagens usadas por cliente e servidor (movimento, interação, Session)
-  tests/            Executor, testes unitários e teste de rede (ADR-0007, ADR-0008)
+  tests/            Executor, testes unitários, teste de rede e medição de carga (ADR-0007, ADR-0008)
 .github/            Templates de issue e PR, CI e Dependabot
 docs/
   PLANO_MESTRE.md   Plano de desenvolvimento (fonte de referência)

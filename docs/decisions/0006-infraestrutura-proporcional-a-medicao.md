@@ -1,6 +1,6 @@
 # ADR-0006: Infraestrutura proporcional à carga medida
 
-- **Status:** Aceito
+- **Status:** Aceito, complementado pelo [ADR-0009](0009-dimensionamento-a-partir-da-medicao.md) (a estimativa de "1 ou 2 VPS" foi retirada)
 - **Data:** 2026-11-24
 
 ## Contexto

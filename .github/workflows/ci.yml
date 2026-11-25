@@ -57,6 +57,9 @@ jobs:
       - name: Teste de rede (servidor e clientes em script)
         run: bash game/tests/integration/run.sh
 
+      - name: Medição de carga (fumaça, só para o script não apodrecer)
+        run: bash game/tests/performance/run.sh 5 1 "1"
+
       - name: Executar cena principal
         # o Godot sai com código 0 mesmo com erro de script; por isso o log é verificado
         run: |
