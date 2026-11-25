@@ -4,6 +4,8 @@
 
 Este relatório separa o que foi **medido** do que é **estimado** e do que **não foi testado**. Onde há suposição, ela está dita.
 
+> **Atualização (issue #7):** o Android passou a ter um primeiro teste em aparelho real. Veja o [relatório de Android](relatorio-android.md). Onde este documento diz que o Android não foi testado, vale o que está lá.
+
 ## Resumo
 
 - A fundação técnica funciona: servidor Godot headless autoritativo, dois ou mais clientes na mesma partida e uma interação (coletar um cesto) decidida pelo servidor.

@@ -8,7 +8,20 @@ config_version=5
 
 config/name="Além da Jornada"
 run/main_scene="res://client/scenes/test_world.tscn"
+run/main_scene.android="res://client/scenes/connect_screen.tscn"
 config/features=PackedStringArray("4.7")
+config/icon="res://icon.svg"
+
+[display]
+
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=4
+
+[rendering]
+
+renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true
 
 [input]
 

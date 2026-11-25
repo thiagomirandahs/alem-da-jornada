@@ -6,7 +6,7 @@ O plano completo está em [docs/PLANO_MESTRE.md](docs/PLANO_MESTRE.md).
 
 ## Status
 
-**Fase 1 — Protótipo 3D, com a fundação de rede.** Personagem com movimento e câmera em terceira pessoa no PC, e um servidor autoritativo (headless) com vários clientes e uma interação validada pelo servidor (cesto de grãos). Controles de Android, cenário do Egito e predição de movimento no cliente ainda não existem.
+**Fase 1 — Protótipo 3D, com a fundação de rede.** Personagem com movimento e câmera em terceira pessoa no PC, e um servidor autoritativo (headless) com vários clientes e uma interação validada pelo servidor (cesto de grãos). No Android, há APK de debug com tela de conexão e controles de toque, testado em um aparelho ([relatório](docs/testing/relatorio-android.md)). Cenário do Egito e predição de movimento no cliente ainda não existem.
 
 ## Requisitos do ambiente
 
@@ -59,6 +59,36 @@ GODOT=/caminho/do/godot bash game/tests/integration/run.sh
 ```bash
 GODOT=/caminho/do/godot bash game/tests/performance/run.sh [segundos=60] [repetições=3] ["jogadores"="1 2 4 8"]
 ```
+
+## Android (APK de debug)
+
+**Preparação, uma vez**, sem administrador e sem mexer no PATH. Versões e checksums em [versions.env](versions.env) (`ANDROID_*` e `GODOT_TEMPLATES_SHA512`); **confira cada arquivo contra o checksum antes de extrair**.
+
+| O quê | Para quê | Onde pôr |
+|---|---|---|
+| Java 17, Temurin (`OpenJDK17U-jdk_x64_windows_hotspot_<ANDROID_JDK_VERSION>.zip`, no GitHub do Adoptium) | `keytool` e `apksigner` | `%LOCALAPPDATA%\Programs\Temurin\` |
+| `platform-tools_r37.0.3-win.zip` (`dl.google.com/android/repository/`) | `adb` | `%LOCALAPPDATA%\Android\Sdk\` (cria `platform-tools\`) |
+| `build-tools_r36.1_windows.zip` (mesmo lugar) | `apksigner` | a pasta `android-16` do zip vira `%LOCALAPPDATA%\Android\Sdk\build-tools\36.1.0\` |
+| `Godot_v4.7.2-stable_export_templates.tpz` (1,28 GB, GitHub do Godot) | APK base | extrair só `templates/android_*` e `templates/version.txt` para `%APPDATA%\Godot\export_templates\4.7.2.stable\` |
+
+O Android SDK tem licença própria ([developer.android.com/studio/terms](https://developer.android.com/studio/terms)). Depois, no editor, em **Editor → Configurações do Editor → Exportar → Android**, aponte o *Java SDK Path* e o *Android SDK Path*. A chave de debug o Godot cria sozinho em `%APPDATA%\Godot\keystores\`, **fora do repositório; nenhuma chave entra no repositório**. A exportação padrão (modelo pré-compilado) não precisa de NDK, CMake nem Gradle.
+
+**Exportar e instalar** (celular com *Depuração USB* ligada):
+
+```bash
+godot --headless --path game --export-debug "Android" ../build/alem-da-jornada-debug.apk
+adb install -r build/alem-da-jornada-debug.apk
+```
+
+**Jogar do celular contra o servidor do PC (rede local).** O servidor **não tem autenticação**: só em rede local de confiança, só durante o teste, e nunca exposto à internet. Escute apenas no endereço do PC nessa rede (não em `0.0.0.0`) e, na tela de conexão do app, digite `ip:7777`:
+
+```bash
+godot --headless --path game res://server/server_world.tscn -- --bind=192.168.0.10
+```
+
+O firewall do Windows pode pedir permissão para a porta UDP, e **essa decisão é de quem usa o PC**. Redes que o Windows classifica como "Pública" costumam bloquear conexões de entrada.
+
+O app pede só a permissão de internet. Os controles de toque (joystick à esquerda, arrastar à direita para girar a câmera, botão *Interagir*) aparecem no Android; no PC, `--touch` os mostra para conferir o layout.
 
 Leia [CONTRIBUTING.md](CONTRIBUTING.md) antes de abrir a primeira issue.
 
