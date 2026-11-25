@@ -9,6 +9,8 @@ var _bodies: Dictionary = {} # peer -> CharacterBody3D
 var _inputs: Dictionary = {} # peer -> {"move": Vector2, "yaw": float}, só o último vale
 var _objects: Dictionary = {} # id -> posição dos itens coletáveis do nível
 var _taken: Dictionary = {} # id -> peer que coletou
+var _required: Array[String] = [] # ids que a missão exige
+var _mission_done := false
 var _last_collect: Dictionary = {} # peer -> instante do último pedido (ms)
 var _spawned := 0
 var _tick := 0
@@ -38,6 +40,7 @@ func _ready() -> void:
 	_session.collect_requested.connect(_on_collect_requested)
 	for node in get_tree().get_nodes_in_group("collectable"):
 		_objects[str(node.name)] = (node as Node3D).global_position
+	_required = Mission.required(_objects)
 	if args.has("--stats"):
 		_stats = ServerStats.new()
 		_stats_last_msec = Time.get_ticks_msec()
@@ -93,6 +96,7 @@ func _on_peer_connected(peer: int) -> void:
 	_bodies[peer] = body
 	for id in _taken: # quem entra depois também precisa saber o que já foi coletado
 		_session.push_collected.rpc_id(peer, id, _taken[id])
+	_session.push_mission.rpc_id(peer, Mission.progress(_required, _taken), _required.size(), _mission_done)
 	print("jogador %d entrou (%d/%d)" % [peer, _bodies.size(), Session.MAX_PLAYERS])
 
 
@@ -123,6 +127,16 @@ func _on_collect_requested(peer: int, id: String) -> void:
 		_taken[id] = peer
 		_session.push_collected.rpc(id, peer)
 		print("jogador %d coletou %s" % [peer, id])
+		if _required.has(id):
+			_update_mission()
 	else:
 		_session.push_denied.rpc_id(peer, id, reason)
 		print("jogador %d recusado em %s: %s" % [peer, id, reason])
+
+
+func _update_mission() -> void:
+	var done := Mission.is_done(_required, _taken)
+	_session.push_mission.rpc(Mission.progress(_required, _taken), _required.size(), done)
+	if done and not _mission_done: # conclui uma única vez
+		_mission_done = true
+		print("missão concluída: coletas por jogador %s" % Mission.contributions(_required, _taken))

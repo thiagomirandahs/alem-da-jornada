@@ -2,6 +2,7 @@
 # Teste de integração (ADR-0008), sem interface:
 #   1. servidor + 2 clientes em script (coleta validada, entrada adulterada, mensagens inválidas, saída de cliente);
 #   2. outro servidor + 9 conexões: só 8 entram.
+#   3. missão da colheita: 2 clientes colhem os 10 feixes, a conclusão é registrada uma vez e quem entra depois a vê.
 # Uso, na raiz do repositório:  GODOT=/caminho/do/godot bash game/tests/integration/run.sh
 # (rode antes: godot --headless --path game --import)
 set -u
@@ -51,10 +52,27 @@ kill -0 "$SERVER2" 2>/dev/null; ALIVE2=$?
 [ "$ENTRADAS" -eq 8 ] || fail "o servidor registrou $ENTRADAS entradas, esperado 8"
 [ "$ALIVE2" -eq 0 ] || fail "o servidor caiu com 9 conexões"
 
+
+# 3. missão coletiva: dois clientes colhem os 10 feixes; quem entra depois vê a missão concluída
+start_server "$((PORT + 2))" "$LOGS/server3.log"
+SERVER3=$SERVER
+mbot() { godot_script res://tests/integration/bot.gd -- --role="$1" --port="$((PORT + 2))" >"$LOGS/$1.log" 2>&1; }
+mbot w0 & W0=$!
+mbot w1 & W1=$!
+wait "$W0"; RW0=$?
+wait "$W1"; RW1=$?
+mbot late; RL=$?
+CONCLUSOES="$(grep -c "missão concluída" "$LOGS/server3.log")"
+kill -0 "$SERVER3" 2>/dev/null; ALIVE3=$?
+[ "$RW0" -eq 0 ] || fail "colhedor w0 (código $RW0)"
+[ "$RW1" -eq 0 ] || fail "colhedor w1 (código $RW1)"
+[ "$RL" -eq 0 ] || fail "cliente tardio (código $RL)"
+[ "$CONCLUSOES" -eq 1 ] || fail "o servidor registrou $CONCLUSOES conclusões, esperado 1"
+[ "$ALIVE3" -eq 0 ] || fail "o servidor caiu na missão"
 if [ "$status" -ne 0 ]; then
-	for f in server a b server2 fill; do echo "----- $f.log"; cat "$LOGS/$f.log"; done
+	for f in server a b server2 fill server3 w0 w1 late; do echo "----- $f.log"; cat "$LOGS/$f.log"; done
 else
-	echo "rede ok: 2 clientes, coleta validada pelo servidor, 9ª conexão recusada"
+	echo "rede ok: 2 clientes, coleta validada pelo servidor, 9ª conexão recusada, missão da colheita concluída uma vez"
 	grep -E "coletou|recusado" "$LOGS/server.log"
 fi
 exit "$status"
