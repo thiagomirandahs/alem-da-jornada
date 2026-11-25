@@ -3,15 +3,13 @@ extends RefCounted
 ## Missão 1, A grande colheita (PLANO_MESTRE §2.3): objetivo coletivo decidido só pelo servidor (ADR-0003).
 ## Regra pura: recebe o que o servidor já sabe (quem coletou o quê) e devolve o estado da missão.
 
-# shortcut: os feixes da missão são os objetos do nível cujo nome começa assim; com a segunda missão, trocar por dados da missão.
-const WHEAT_PREFIX := "Trigo"
 
 
-## Ids que a missão exige, em ordem. objects: id -> posição dos objetos coletáveis do nível.
-static func required(objects: Dictionary) -> Array[String]:
+## Ids que a missão exige (os que começam com `prefix`), em ordem. objects: id -> posição dos objetos coletáveis do nível.
+static func required(objects: Dictionary, prefix: String) -> Array[String]:
 	var ids: Array[String] = []
 	for id in objects:
-		if str(id).begins_with(WHEAT_PREFIX):
+		if str(id).begins_with(prefix):
 			ids.append(str(id))
 	ids.sort()
 	return ids
@@ -38,3 +36,11 @@ static func contributions(needed: Array[String], taken: Dictionary) -> Dictionar
 		if taken.has(id):
 			by_peer[taken[id]] = int(by_peer.get(taken[id], 0)) + 1
 	return by_peer
+
+
+## Índice da missão ativa: a primeira não concluída (LIST.size() se todas concluíram). done: um bool por missão, em ordem.
+static func active_index(done: Array) -> int:
+	for i in done.size():
+		if not done[i]:
+			return i
+	return done.size()

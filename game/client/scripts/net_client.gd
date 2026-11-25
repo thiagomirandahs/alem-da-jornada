@@ -10,7 +10,7 @@ var _avatars: Dictionary = {} # peer -> Node3D
 var _targets: Dictionary = {} # peer -> último Vector3 recebido do servidor
 var _rig: Node3D # câmera do jogador local; só existe depois do primeiro estado
 var _message := ""
-var _mission := ""
+var _missions: Dictionary = {} # id da missão -> linha do HUD
 
 @onready var _session: Session = $Session
 @onready var _label: Label = $Hud/Label
@@ -48,6 +48,10 @@ func _process(delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("interact") and _rig != null:
+		var zone := _zone_in_reach()
+		if not zone.is_empty():
+			_session.request_deliver.rpc_id(1, zone)
+			return
 		var id := _nearest_collectable_id()
 		if not id.is_empty():
 			_session.request_collect.rpc_id(1, id)
@@ -107,8 +111,9 @@ func _nearest_collectable_id() -> String:
 
 
 func _update_hud() -> void:
-	_label.text = "Você: jogador %d | Jogadores: %d\nWASD: andar | mouse: câmera | E: coletar | Esc: soltar o mouse\n%s\n%s" % [
-		multiplayer.get_unique_id(), _avatars.size(), _mission, _message]
+	_label.text = "Você: jogador %d | Jogadores: %d\nWASD: andar | mouse: câmera | E: coletar ou entregar | Esc: soltar o mouse\n%s\n%s" % [
+		multiplayer.get_unique_id(), _avatars.size(), "
+".join(_missions.values()), _message]
 
 
 func _quit(message: String) -> void:
@@ -116,6 +121,16 @@ func _quit(message: String) -> void:
 	get_tree().quit(1)
 
 
-func _on_mission(collected: int, target: int, done: bool) -> void:
-	_mission = "Missão concluída!" if done else "Colheita: %d/%d" % [collected, target]
+func _on_mission(mission: String, collected: int, target: int, done: bool) -> void:
+	var title := str(mission).capitalize()
+	_missions[mission] = "%s: concluída!" % title if done else "%s: %d/%d" % [title, collected, target]
 	_update_hud()
+
+
+## Zona de entrega ao alcance (só para decidir qual pedido enviar; quem valida é o servidor).
+func _zone_in_reach() -> String:
+	var here: Vector3 = (_avatars[multiplayer.get_unique_id()] as Node3D).position
+	for node in get_tree().get_nodes_in_group("delivery_zone"):
+		if here.distance_to((node as Node3D).global_position) <= Delivery.REACH:
+			return str(node.name)
+	return ""

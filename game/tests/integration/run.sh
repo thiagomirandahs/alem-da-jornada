@@ -62,17 +62,17 @@ mbot w1 & W1=$!
 wait "$W0"; RW0=$?
 wait "$W1"; RW1=$?
 mbot late; RL=$?
-CONCLUSOES="$(grep -c "missão concluída" "$LOGS/server3.log")"
+CONCLUSOES="$(grep -c "missão .* concluída" "$LOGS/server3.log")"
 kill -0 "$SERVER3" 2>/dev/null; ALIVE3=$?
 [ "$RW0" -eq 0 ] || fail "colhedor w0 (código $RW0)"
 [ "$RW1" -eq 0 ] || fail "colhedor w1 (código $RW1)"
 [ "$RL" -eq 0 ] || fail "cliente tardio (código $RL)"
-[ "$CONCLUSOES" -eq 1 ] || fail "o servidor registrou $CONCLUSOES conclusões, esperado 1"
+[ "$CONCLUSOES" -eq 2 ] || fail "o servidor registrou $CONCLUSOES conclusões, esperado 2 (uma por missão)"
 [ "$ALIVE3" -eq 0 ] || fail "o servidor caiu na missão"
 if [ "$status" -ne 0 ]; then
 	for f in server a b server2 fill server3 w0 w1 late; do echo "----- $f.log"; cat "$LOGS/$f.log"; done
 else
-	echo "rede ok: 2 clientes, coleta validada pelo servidor, 9ª conexão recusada, missão da colheita concluída uma vez"
+	echo "rede ok: 2 clientes, coleta validada pelo servidor, 9ª conexão recusada, duas missões (colher e entregar) concluídas, cada uma uma vez"
 	grep -E "coletou|recusado" "$LOGS/server.log"
 fi
 exit "$status"

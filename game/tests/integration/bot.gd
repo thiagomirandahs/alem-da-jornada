@@ -3,10 +3,10 @@ extends SceneTree
 ## como faria um cliente adulterado. Papéis:
 ##   a: pede de longe (recusado), anda até o cesto e coleta; espera b sair (servidor continua vivo).
 ##   b: tenta coletar o que já foi coletado, um objeto inexistente, envia entrada adulterada e mensagens inválidas.
-##   w0 e w1: colhem metade dos feixes de trigo cada um até a missão concluir; late entra depois e vê a missão concluída.
+##   w0 e w1: colhem metade dos feixes de trigo cada um até a missão concluir as duas missões (colher e entregar); late entra depois e vê tudo concluído.
 ## Uso: godot --headless --path game -s res://tests/integration/bot.gd -- --role=a --port=17777
 
-const TIMEOUT_SEC := 30.0
+const TIMEOUT_SEC := 90.0
 const ACCEPTED := "aceito"
 
 var _session: Session
@@ -15,9 +15,9 @@ var _tick := 0
 var _confirmations := 0
 var _confirmed_by := 0
 var _denied := ""
-var _mission_collected := 0
-var _mission_target := 0
-var _mission_done := false
+var _deliveries := 0
+var _mission_progress: Dictionary = {}
+var _mission_done: Dictionary = {} # id da missão -> concluída
 var _done := false
 
 
@@ -36,6 +36,7 @@ func _initialize() -> void:
 	_session.collect_confirmed.connect(_on_confirmed)
 	_session.collect_denied.connect(_on_denied)
 	_session.mission_updated.connect(_on_mission)
+	_session.delivery_confirmed.connect(func(_id: String, _by: int) -> void: _deliveries += 1)
 	var peer := ENetMultiplayerPeer.new()
 	if peer.create_client("127.0.0.1", port) != OK:
 		_fail("não foi possível iniciar o cliente")
@@ -131,30 +132,63 @@ func _role_b() -> void:
 
 
 
-## Colhe os feixes de índice par (part=0) ou ímpar (part=1) e espera a missão concluir.
+## Colhe os feixes e os sacos de índice par (part=0) ou ímpar (part=1), entrega os sacos no celeiro e espera as duas missões.
 func _role_worker(part: int) -> void:
 	var me := get_multiplayer().get_unique_id()
 	await _wait_until(func() -> bool: return _players.has(me))
-	var ids := _wheat_ids()
-	for i in ids.size():
-		if i % 2 != part:
-			continue
-		var target := _level_position(ids[i])
-		await _walk_to(target)
-		await create_timer(0.4).timeout
-		var reply := await _request_collect(ids[i])
-		if not _expect(reply == ACCEPTED, "%s deveria ser aceito, veio '%s'" % [ids[i], reply]):
+	for id in _ids_with_prefix("Trigo", part):
+		if not await _collect(id):
 			return
-	await _wait_until(func() -> bool: return _mission_done)
-	if _expect(_mission_collected == ids.size() and _mission_target == ids.size(), "progresso final %d/%d, esperado %d" % [_mission_collected, _mission_target, ids.size()]):
+	await _wait_until(func() -> bool: return _mission_done.get("colheita", false))
+	var sacks := _ids_with_prefix("Saco", part)
+	for id in sacks:
+		if not await _collect(id):
+			return
+	await _walk_to(_level_position("Celeiro"))
+	for id in sacks:
+		await create_timer(0.4).timeout
+		var reply := await _request_deliver("Celeiro")
+		if not _expect(reply == ACCEPTED, "entrega deveria ser aceita, veio '%s'" % reply):
+			return
+	await _wait_until(func() -> bool: return _all_done())
+	if _expect(_mission_progress["colheita"] == Vector2i(10, 10) and _mission_progress["transporte"] == Vector2i(6, 6), "progresso final errado: %s" % [_mission_progress]):
 		_pass()
 
 
-## Entra depois da conclusão e já deve receber a missão concluída.
+## Entra depois da conclusão e já deve receber as duas missões concluídas.
 func _role_late() -> void:
-	await _wait_until(func() -> bool: return _mission_done)
-	if _expect(_mission_collected == _mission_target and _mission_target > 0, "quem entra depois deveria ver a missão concluída"):
-		_pass()
+	await _wait_until(func() -> bool: return _all_done())
+	_pass()
+
+
+func _all_done() -> bool:
+	return _mission_done.get("colheita", false) and _mission_done.get("transporte", false)
+
+
+func _collect(id: String) -> bool:
+	await _walk_to(_level_position(id))
+	await create_timer(0.4).timeout
+	var reply := await _request_collect(id)
+	return _expect(reply == ACCEPTED, "%s deveria ser aceito, veio '%s'" % [id, reply])
+
+
+## Pede a entrega; ACCEPTED se o servidor confirmou, senão o motivo da recusa.
+func _request_deliver(zone: String) -> String:
+	var baseline := _deliveries
+	_denied = ""
+	_session.request_deliver.rpc_id(1, zone)
+	await _wait_until(func() -> bool: return _denied != "" or _deliveries > baseline)
+	return _denied if _denied != "" else ACCEPTED
+
+
+## Ids do nível com o prefixo, só os de índice par ou ímpar.
+func _ids_with_prefix(prefix: String, part: int) -> Array[String]:
+	var all := _level_ids(prefix)
+	var mine: Array[String] = []
+	for i in all.size():
+		if i % 2 == part:
+			mine.append(all[i])
+	return mine
 
 
 func _walk_to(target: Vector3) -> void:
@@ -166,13 +200,13 @@ func _walk_to(target: Vector3) -> void:
 	_session.send_input.rpc_id(1, Vector2.ZERO, 0.0)
 
 
-func _wheat_ids() -> Array[String]:
+func _level_ids(prefix: String) -> Array[String]:
 	var level := (load("res://shared/level.tscn") as PackedScene).instantiate()
 	var objects := {}
 	for node in level.get_children():
-		objects[str(node.name)] = (node as Node3D).position if node is Node3D else Vector3.ZERO
+		objects[str(node.name)] = Vector3.ZERO
 	level.free()
-	return Mission.required(objects)
+	return Mission.required(objects, prefix)
 
 
 func _level_position(id: String) -> Vector3:
@@ -182,10 +216,11 @@ func _level_position(id: String) -> Vector3:
 	return position
 
 
-func _on_mission(collected: int, target: int, done: bool) -> void:
-	_mission_collected = collected
-	_mission_target = target
-	_mission_done = done
+func _on_mission(mission: String, collected: int, target: int, done: bool) -> void:
+	_mission_progress[mission] = Vector2i(collected, target)
+	_mission_done[mission] = done
+
+
 ## Envia o pedido e espera a resposta: o motivo da recusa, ou ACCEPTED se o servidor confirmou a coleta.
 func _request_collect(id: Variant) -> String:
 	var baseline := _confirmations
