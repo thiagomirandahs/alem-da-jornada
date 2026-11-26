@@ -6,12 +6,16 @@ const REACH := 3.0
 const NO_ZONE := "inexistente"
 const TOO_FAR := "longe"
 const NOT_CARRYING := "sem_carga"
+const WRONG_ZONE := "zona_errada"
+const NO_MISSION := "sem_missao"
 
 
-## Retorna "" se pode entregar; senão, o motivo. zones: id -> posição. carried: ids que o jogador carrega.
-static func check(player_pos: Vector3, zones: Dictionary, zone_id: String, carried: Array) -> String:
+## Retorna "" se pode entregar; senão, o motivo. expected_zone: a zona da missão ativa. zones: id -> posição. carried: ids que o jogador carrega.
+static func check(player_pos: Vector3, zones: Dictionary, zone_id: String, expected_zone: String, carried: Array) -> String:
 	if not zones.has(zone_id):
 		return NO_ZONE
+	if zone_id != expected_zone:
+		return WRONG_ZONE
 	if player_pos.distance_to(zones[zone_id]) > REACH:
 		return TOO_FAR
 	if carried.is_empty():

@@ -150,8 +150,12 @@ func _on_deliver_requested(peer: int, zone: String) -> void:
 		_session.push_denied.rpc_id(peer, zone, "rapido")
 		return
 	_last_collect[peer] = now
-	var carried := Delivery.carried_by(peer, _delivery_prefix(), _taken, _delivered)
-	var reason := Delivery.check((_bodies[peer] as CharacterBody3D).position, _zones, zone, carried)
+	var active := _active_delivery()
+	if active.is_empty():
+		_session.push_denied.rpc_id(peer, zone, Delivery.NO_MISSION)
+		return
+	var carried := Delivery.carried_by(peer, active.prefix, _taken, _delivered)
+	var reason := Delivery.check((_bodies[peer] as CharacterBody3D).position, _zones, zone, active.zone, carried)
 	if reason.is_empty():
 		_delivered[carried[0]] = peer
 		_session.push_delivered.rpc(carried[0], peer)
@@ -174,11 +178,12 @@ func _in_mission(id: String) -> bool:
 	return false
 
 
-func _delivery_prefix() -> String:
-	for def in Missions.LIST:
-		if def.kind == "deliver":
-			return def.prefix
-	return ""
+## Missão de entrega ativa (a primeira não concluída), ou {} se a ativa não é de entrega.
+func _active_delivery() -> Dictionary:
+	var i := Mission.active_index(_mission_done)
+	if i < Missions.LIST.size() and Missions.LIST[i].kind == "deliver":
+		return Missions.LIST[i]
+	return {}
 
 
 ## Informa o progresso de todas as missões e conclui, uma única vez, cada uma que atingiu a meta.
