@@ -16,6 +16,7 @@ var _confirmations := 0
 var _confirmed_by := 0
 var _denied := ""
 var _deliveries := 0
+var _side := 0.0 # deslocamento lateral de cada colhedor
 var _mission_progress: Dictionary = {}
 var _mission_done: Dictionary = {} # id da missão -> concluída
 var _done := false
@@ -132,37 +133,48 @@ func _role_b() -> void:
 
 
 
-## Colhe os feixes e os sacos de índice par (part=0) ou ímpar (part=1), entrega os sacos no celeiro e espera as duas missões.
+## Colhe e entrega a sua metade de cada missão, na ordem (colheita, transporte, armazéns), e espera todas concluírem.
 func _role_worker(part: int) -> void:
+	_side = 0.9 if part == 0 else -0.9
 	var me := get_multiplayer().get_unique_id()
 	await _wait_until(func() -> bool: return _players.has(me))
 	for id in _ids_with_prefix("Trigo", part):
 		if not await _collect(id):
 			return
 	await _wait_until(func() -> bool: return _mission_done.get("colheita", false))
-	var sacks := _ids_with_prefix("Saco", part)
-	for id in sacks:
-		if not await _collect(id):
-			return
-	await _walk_to(_level_position("Celeiro"))
-	for id in sacks:
-		await create_timer(0.4).timeout
-		var reply := await _request_deliver("Celeiro")
-		if not _expect(reply == ACCEPTED, "entrega deveria ser aceita, veio '%s'" % reply):
-			return
+	if not await _carry_and_deliver("Saco", "Celeiro", part):
+		return
+	await _wait_until(func() -> bool: return _mission_done.get("transporte", false))
+	if not await _carry_and_deliver("Jarro", "Armazem", part):
+		return
 	await _wait_until(func() -> bool: return _all_done())
-	if _expect(_mission_progress["colheita"] == Vector2i(10, 10) and _mission_progress["transporte"] == Vector2i(6, 6), "progresso final errado: %s" % [_mission_progress]):
+	var expected := {"colheita": Vector2i(10, 10), "transporte": Vector2i(6, 6), "armazens": Vector2i(6, 6)}
+	if _expect(_mission_progress == expected, "progresso final errado: %s" % [_mission_progress]):
 		_pass()
 
 
-## Entra depois da conclusão e já deve receber as duas missões concluídas.
+func _carry_and_deliver(prefix: String, zone: String, part: int) -> bool:
+	var mine := _ids_with_prefix(prefix, part)
+	for id in mine:
+		if not await _collect(id):
+			return false
+	await _walk_to(_level_position(zone))
+	for id in mine:
+		await create_timer(0.4).timeout
+		var reply := await _request_deliver(zone)
+		if not _expect(reply == ACCEPTED, "entrega em %s deveria ser aceita, veio '%s'" % [zone, reply]):
+			return false
+	return true
+
+
+## Entra depois da conclusão e já deve receber todas as missões concluídas.
 func _role_late() -> void:
 	await _wait_until(func() -> bool: return _all_done())
 	_pass()
 
 
 func _all_done() -> bool:
-	return _mission_done.get("colheita", false) and _mission_done.get("transporte", false)
+	return _mission_done.get("colheita", false) and _mission_done.get("transporte", false) and _mission_done.get("armazens", false)
 
 
 func _collect(id: String) -> bool:
@@ -181,17 +193,18 @@ func _request_deliver(zone: String) -> String:
 	return _denied if _denied != "" else ACCEPTED
 
 
-## Ids do nível com o prefixo, só os de índice par ou ímpar.
+## Ids do nível com o prefixo: a primeira metade (part=0) ou a segunda (part=1).
 func _ids_with_prefix(prefix: String, part: int) -> Array[String]:
 	var all := _level_ids(prefix)
 	var mine: Array[String] = []
 	for i in all.size():
-		if i % 2 == part:
+		if (i >= all.size() / 2) == (part == 1): # metades separadas, para um colhedor não travar o outro
 			mine.append(all[i])
 	return mine
 
 
 func _walk_to(target: Vector3) -> void:
+	target += Vector3(_side, 0, 0) # um de cada lado, para um não travar o outro
 	var me := get_multiplayer().get_unique_id()
 	while not _done and (_players[me] as Vector3).distance_to(target) > Interaction.REACH - 0.8:
 		var to: Vector3 = target - (_players[me] as Vector3)
@@ -283,3 +296,5 @@ func _pass() -> void:
 	_done = true
 	print("bot ok")
 	quit(0)
+
+

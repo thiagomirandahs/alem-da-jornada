@@ -5,5 +5,6 @@ extends RefCounted
 
 const LIST: Array[Dictionary] = [
 	{"id": "colheita", "title": "Colheita", "kind": "collect", "prefix": "Trigo"},
-	{"id": "transporte", "title": "Transporte", "kind": "deliver", "prefix": "Saco"},
+	{"id": "transporte", "title": "Transporte", "kind": "deliver", "prefix": "Saco", "zone": "Celeiro"},
+	{"id": "armazens", "title": "Armazéns", "kind": "deliver", "prefix": "Jarro", "zone": "Armazem"},
 ]

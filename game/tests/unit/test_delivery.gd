@@ -4,19 +4,23 @@ const ZONES := {"Celeiro": Vector3(0, 1, 18)}
 
 
 func test_perto_e_com_carga_aceita() -> String:
-	return _expect("", Delivery.check(Vector3(0, 0, 16), ZONES, "Celeiro", ["Saco01"]))
+	return _expect("", Delivery.check(Vector3(0, 0, 16), ZONES, "Celeiro", "Celeiro", ["Saco01"]))
 
 
 func test_longe_recusa() -> String:
-	return _expect(Delivery.TOO_FAR, Delivery.check(Vector3(0, 0, 0), ZONES, "Celeiro", ["Saco01"]))
+	return _expect(Delivery.TOO_FAR, Delivery.check(Vector3(0, 0, 0), ZONES, "Celeiro", "Celeiro", ["Saco01"]))
 
 
 func test_sem_carga_recusa_mesmo_perto() -> String:
-	return _expect(Delivery.NOT_CARRYING, Delivery.check(Vector3(0, 0, 17), ZONES, "Celeiro", []))
+	return _expect(Delivery.NOT_CARRYING, Delivery.check(Vector3(0, 0, 17), ZONES, "Celeiro", "Celeiro", []))
+
+
+func test_zona_errada_recusa() -> String:
+	return _expect(Delivery.WRONG_ZONE, Delivery.check(Vector3(0, 0, 17), {"Celeiro": Vector3(0, 1, 18), "Armazem": Vector3(0, 1, 17)}, "Armazem", "Celeiro", ["Saco01"]))
 
 
 func test_zona_inexistente_recusa() -> String:
-	return _expect(Delivery.NO_ZONE, Delivery.check(Vector3(0, 0, 17), ZONES, "Nada", ["Saco01"]))
+	return _expect(Delivery.NO_ZONE, Delivery.check(Vector3(0, 0, 17), ZONES, "Nada", "Celeiro", ["Saco01"]))
 
 
 func test_carrega_so_o_que_coletou_e_nao_entregou() -> String:

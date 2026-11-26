@@ -36,6 +36,18 @@ size = Vector3(3, 2, 3)
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_granary"]
 albedo_color = Color(0.7, 0.45, 0.25, 1)
 
+[sub_resource type="BoxMesh" id="BoxMesh_jar"]
+size = Vector3(0.35, 0.5, 0.35)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_jar"]
+albedo_color = Color(0.6, 0.3, 0.2, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_warehouse"]
+size = Vector3(3, 2, 3)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_warehouse"]
+albedo_color = Color(0.4, 0.4, 0.5, 1)
+
 [node name="Level" type="Node3D"]
 
 [node name="Environment" type="WorldEnvironment" parent="."]
@@ -186,3 +198,52 @@ position = Vector3(0, 1, 18)
 [node name="Mesh" type="MeshInstance3D" parent="Celeiro"]
 mesh = SubResource("BoxMesh_granary")
 material_override = SubResource("StandardMaterial3D_granary")
+
+[node name="Jarro01" type="Node3D" parent="." groups=["collectable"]]
+position = Vector3(-5, 0.25, 12)
+
+[node name="Mesh" type="MeshInstance3D" parent="Jarro01"]
+mesh = SubResource("BoxMesh_jar")
+material_override = SubResource("StandardMaterial3D_jar")
+
+[node name="Jarro02" type="Node3D" parent="." groups=["collectable"]]
+position = Vector3(-3, 0.25, 12)
+
+[node name="Mesh" type="MeshInstance3D" parent="Jarro02"]
+mesh = SubResource("BoxMesh_jar")
+material_override = SubResource("StandardMaterial3D_jar")
+
+[node name="Jarro03" type="Node3D" parent="." groups=["collectable"]]
+position = Vector3(-1, 0.25, 12)
+
+[node name="Mesh" type="MeshInstance3D" parent="Jarro03"]
+mesh = SubResource("BoxMesh_jar")
+material_override = SubResource("StandardMaterial3D_jar")
+
+[node name="Jarro04" type="Node3D" parent="." groups=["collectable"]]
+position = Vector3(1, 0.25, 12)
+
+[node name="Mesh" type="MeshInstance3D" parent="Jarro04"]
+mesh = SubResource("BoxMesh_jar")
+material_override = SubResource("StandardMaterial3D_jar")
+
+[node name="Jarro05" type="Node3D" parent="." groups=["collectable"]]
+position = Vector3(3, 0.25, 12)
+
+[node name="Mesh" type="MeshInstance3D" parent="Jarro05"]
+mesh = SubResource("BoxMesh_jar")
+material_override = SubResource("StandardMaterial3D_jar")
+
+[node name="Jarro06" type="Node3D" parent="." groups=["collectable"]]
+position = Vector3(5, 0.25, 12)
+
+[node name="Mesh" type="MeshInstance3D" parent="Jarro06"]
+mesh = SubResource("BoxMesh_jar")
+material_override = SubResource("StandardMaterial3D_jar")
+
+[node name="Armazem" type="Node3D" parent="." groups=["delivery_zone"]]
+position = Vector3(-9, 1, 18)
+
+[node name="Mesh" type="MeshInstance3D" parent="Armazem"]
+mesh = SubResource("BoxMesh_warehouse")
+material_override = SubResource("StandardMaterial3D_warehouse")
