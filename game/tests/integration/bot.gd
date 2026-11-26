@@ -193,12 +193,12 @@ func _request_deliver(zone: String) -> String:
 	return _denied if _denied != "" else ACCEPTED
 
 
-## Ids do nível com o prefixo, só os de índice par ou ímpar.
+## Ids do nível com o prefixo: a primeira metade (part=0) ou a segunda (part=1).
 func _ids_with_prefix(prefix: String, part: int) -> Array[String]:
 	var all := _level_ids(prefix)
 	var mine: Array[String] = []
 	for i in all.size():
-		if i % 2 == part:
+		if (i >= all.size() / 2) == (part == 1): # metades separadas, para um colhedor não travar o outro
 			mine.append(all[i])
 	return mine
 
